@@ -5,14 +5,19 @@ const { Server } = require('socket.io');
 const connectDB = require('./config/db');
 
 var authRouter = require('./routes/authRoutes');
+var terrainRouter = require('./routes/terrainRoutes');
 
 const app = express();
 const server = http.createServer(app);
 
 // Utiliser le middleware CORS pour accepter les connexions du frontend
 app.use(cors({
-  origin: 'http://localhost:3000' // Remplace par l'URL de ton frontend en production
+  origin: 'http://localhost:3000', // Autoriser uniquement votre frontend
+  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE', // Méthodes autorisées
+  allowedHeaders: ['Content-Type', 'Authorization'] // En-têtes autorisés
 }));
+
+app.options('*', cors());
 
 app.use(express.urlencoded({ extended: true }));
 
@@ -27,7 +32,8 @@ const io = new Server(server, {
   }
 });
 
-app.use('/', authRouter);
+app.use('/api/', authRouter);
+app.use('/api/terrain', terrainRouter);
 
 // Gestion des connexions Socket.io
 io.on('connection', (socket) => {
