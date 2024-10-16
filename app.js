@@ -2,6 +2,9 @@ const express = require('express');
 const http = require('http');
 const cors = require('cors');
 const { Server } = require('socket.io');
+const connectDB = require('./config/db');
+
+var authRouter = require('./routes/authRoutes');
 
 const app = express();
 const server = http.createServer(app);
@@ -11,6 +14,11 @@ app.use(cors({
   origin: 'http://localhost:3000' // Remplace par l'URL de ton frontend en production
 }));
 
+app.use(express.urlencoded({ extended: true }));
+
+// Connexion à MongoDB
+connectDB();
+
 // Créer une instance de Socket.io et la lier au serveur HTTP
 const io = new Server(server, {
   cors: {
@@ -19,10 +27,7 @@ const io = new Server(server, {
   }
 });
 
-// Route de test
-app.get('/', (req, res) => {
-  res.send('Backend for the idle game is running');
-});
+app.use('/', authRouter);
 
 // Gestion des connexions Socket.io
 io.on('connection', (socket) => {
