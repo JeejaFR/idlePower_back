@@ -28,11 +28,11 @@ const authController = {
   },
 
   login: async (req, res) => {
-    const { username, password } = req.body;
+    const { email, password } = req.body;
 
     try {
       // Trouver l'utilisateur dans la base de données
-      const user = await Users.findOne({ username });
+      const user = await Users.findOne({ email });
       if (!user || !(await bcrypt.compare(password, user.password))) {
         return res.status(400).json({ message: 'Email ou mot de passe incorrect' });
       }
