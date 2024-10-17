@@ -33,7 +33,7 @@ const io = new Server(server, {
   }
 });
 
-app.use('/api/', authRouter);
+app.use('/api/auth', authRouter);
 app.use('/api/terrain', terrainRouter);
 
 // Gestion des connexions Socket.io

@@ -6,7 +6,7 @@ const terrainController = {
     try {
       const userID = req.user.userId;
       const gridSize = 20;
-      const seed = 3843473;
+      const seed = 1234;
 
       const grid = generateInitialGrid(gridSize, seed);
 

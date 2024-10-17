@@ -9,10 +9,12 @@ const authMiddlewares = {
       return res.status(403).json({ message: 'Pas de token fourni' });
     }
 
-    jwt.verify(token, process.env.SECRET_KEY, (err, decoded) => {
+    const actualToken = token.startsWith('Bearer ') ? token.slice(7, token.length) : token;
+
+    jwt.verify(actualToken, process.env.SECRET_KEY, (err, decoded) => {
       if (err) {
         console.log("token invalid: ");
-        return res.status(403).json({ message: 'Token invalid' });
+        return res.status(401).json({ message: 'Token invalid' });
       }
       req.user = decoded;
       next();
