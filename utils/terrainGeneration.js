@@ -1,12 +1,11 @@
-const Noise = require('noisejs');
-
+const { Noise } = require('noisejs');
 
 const textures = {
   lacs: [
-      { image: "lacs1", weight: 0.4 },
-      { image: "lacs1", weight: 0.3 },
-      { image: "lacs1", weight: 0.2 },
-      { image: "lacs1", weight: 0.1 },
+    { image: "water2", weight: 0.4 },
+    { image: "water2", weight: 0.3 },
+    { image: "water2", weight: 0.2 },
+    { image: "water2", weight: 0.1 },
   ],
   plaines: [
     { image: "grass1", weight: 0.4 },
@@ -84,4 +83,8 @@ const generateInitialGrid = (gridSize, seed) => {
       };
     })
   );
+};
+
+module.exports = {
+  generateInitialGrid,
 };
