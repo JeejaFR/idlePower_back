@@ -3,6 +3,8 @@ var router = express.Router();
 const terrainController = require('../controllers/terrainController');
 const authMiddleware = require('../middlewares/authMiddlewares');
 
-router.get('/generate', authMiddleware.verifyToken, terrainController.generate);
+router.get('/', authMiddleware.verifyToken, terrainController.getTerrain);
+
+router.post('/building', authMiddleware.verifyToken, terrainController.placeBatiment);
 
 module.exports = router;
