@@ -6,6 +6,7 @@ const connectDB = require('./config/db');
 
 var authRouter = require('./routes/authRoutes');
 var terrainRouter = require('./routes/terrainRoutes');
+var batimentRouter = require('./routes/batimentRoutes');
 
 const app = express();
 const server = http.createServer(app);
@@ -35,6 +36,8 @@ const io = new Server(server, {
 
 app.use('/api/auth', authRouter);
 app.use('/api/terrain', terrainRouter);
+app.use('/api/batiments', batimentRouter);
+
 
 // Gestion des connexions Socket.io
 io.on('connection', (socket) => {

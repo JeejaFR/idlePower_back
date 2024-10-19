@@ -63,7 +63,6 @@ const terrainController = {
     try {
       const userID = req.user.userId;
       const batimentID = req.body.batimentID;
-      // const batimentID = "6712a458f6fb6b1faec71787";
 
       const x = req.body.positionX;
       const y = req.body.positionY;
