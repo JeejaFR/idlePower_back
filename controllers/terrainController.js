@@ -8,8 +8,8 @@ const generateTerrain = (userID) => {
   const gridSize = 20;
   const seed = 3843473;
   const grid = generateInitialGrid(gridSize, seed);
-
-  return { userID, grid };
+  const rates = {energy: {production: 0, consommation: 0}, money: {production: 0, consommation: 0}};
+  return { userID, grid, rates };
 };
 
 const canPlaceBatiment = (grid, x, y, batiment) => {
@@ -67,10 +67,6 @@ const terrainController = {
       const x = req.body.positionX;
       const y = req.body.positionY;
 
-      console.log("x: "+x);
-      console.log("y: "+y);
-
-
       const user = await Users.findById(userID);
       if (!user) {
         return res.status(404).json({ message: "Utilisateur non trouvé" });
@@ -110,7 +106,24 @@ const terrainController = {
         }
       }
 
+      switch (batiment.type) {
+        case "energy":
+          terrain.rates.energy.production += batiment.production;
+          break;
+        case "money":
+          terrain.rates.money.production += batiment.production;
+          break;
+        default:
+          break;
+      }
+
+      terrain.rates.energy.consommation += batiment.consommation;
+      terrain.rates.energy.production -= batiment.consommation; // todo peut être revoir la structure
       terrain.grid = updatedTerrain;
+
+      terrain.markModified('rates');
+      terrain.markModified('grid');
+
       await terrain.save();
   
       res.json(updatedTerrain[x][y]);
