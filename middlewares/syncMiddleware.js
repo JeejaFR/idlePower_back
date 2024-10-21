@@ -4,8 +4,6 @@ const { Terrains } = require("../models/terrainsModel");
 const syncMiddleware = {
   synchronizeBanks: async (req, res, next) => {
     try {
-      console.log("on synchronise");
-      
       const userID = req.user.userId;
 
       const user = await Users.findById(userID);
@@ -26,6 +24,15 @@ const syncMiddleware = {
       const differenceInMilliseconds = actualDate - last_sync;
 
       const differenceInSeconds = Math.floor(differenceInMilliseconds / 1000);
+
+      // Si plus de 10 minutes d'écart on ne sauvegarde pas
+      if(differenceInSeconds > 60*10){
+        terrain.last_sync = actualDate;
+        terrain.markModified("last_sync");
+        await terrain.save();
+        next();
+        return;
+      }
 
       const energyPerSeconde = terrain.rates.energy.production - terrain.rates.energy.consommation;
       const moneyPerSeconde = terrain.rates.money.production - terrain.rates.money.consommation;

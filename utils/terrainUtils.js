@@ -85,6 +85,10 @@ const generateInitialGrid = (gridSize, seed) => {
   );
 };
 
+const disjoncter = (grid) => {
+  
+}
+
 module.exports = {
   generateInitialGrid,
 };

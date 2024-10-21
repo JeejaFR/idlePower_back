@@ -2,16 +2,16 @@ const { Users } = require("../models/usersModel");
 const { Terrains } = require("../models/terrainsModel.js");
 const { Batiments } = require("../models/batimentsModel.js");
 
-const { generateInitialGrid } = require('../utils/terrainUtils.js');
+const { generateInitialGrid } = require("../utils/terrainUtils.js");
 
 const generateTerrain = (userID) => {
   const gridSize = 20;
   const seed = 3843473;
   const grid = generateInitialGrid(gridSize, seed);
-  const rates = {energy: {production: 0, consommation: 0}, money: {production: 0, consommation: 0}};
-  const banks = {energy: 0, money: 10};
+  const rates = { energy: { production: 0, consommation: 0 }, money: { production: 0, consommation: 0 } };
+  const banks = { energy: 0, money: 10 };
   const last_sync = new Date();
-  return { userID, grid, rates, banks, last_sync};
+  return { userID, grid, rates, banks, last_sync };
 };
 
 const canPlaceBatiment = (grid, x, y, batiment) => {
@@ -24,7 +24,7 @@ const canPlaceBatiment = (grid, x, y, batiment) => {
 
       const isOutOfMap = targetX < 0 || targetX >= grid.length || targetY < 0 || targetY >= grid[targetX].length;
 
-      if(isOutOfMap){
+      if (isOutOfMap) {
         return false;
       }
 
@@ -50,19 +50,15 @@ const terrainController = {
         return res.status(404).json({ message: "Utilisateur non trouvé" });
       }
 
-      const terrain = await Terrains.findOneAndUpdate(
-        { userID },
-        { $setOnInsert: generateTerrain(userID) },
-        { new: true, upsert: true }
-      );
+      const terrain = await Terrains.findOneAndUpdate({ userID }, { $setOnInsert: generateTerrain(userID) }, { new: true, upsert: true });
 
       const last_sync = new Date();
       terrain.last_sync = last_sync;
       await terrain.save();
-  
+
       res.json(terrain);
     } catch (error) {
-      res.status(500).json({ message: 'Erreur lors de la récupération ou génération du terrain' });
+      res.status(500).json({ message: "Erreur lors de la récupération ou génération du terrain" });
     }
   },
   placeBatiment: async (req, res) => {
@@ -78,7 +74,7 @@ const terrainController = {
         return res.status(404).json({ message: "Utilisateur non trouvé" });
       }
 
-      const terrain = await Terrains.findOne({userID});
+      const terrain = await Terrains.findOne({ userID });
       if (!terrain) {
         return res.status(404).json({ message: "Terrain non trouvé" });
       }
@@ -92,21 +88,32 @@ const terrainController = {
       if (!canPlaceBatiment(terrain.grid, x, y, batiment)) {
         return res.status(403).json({ message: "Vous ne pouvez pas placer de batiment ici" });
       }
-  
+
+      const canAffordBatiment = terrain.banks.money >= batiment.price;
+      if (!canAffordBatiment) {
+        return res.status(403).json({ message: "Vous n'avez pas les fonds nécessaires'" });
+      }
+
+      // Créer une copie du batiment et modifier sa propriété isRunning
+      const updatedBatiment = { ...batiment.toObject(), isRunning: true };
+
+      // Cloner le terrain
       const updatedTerrain = [...terrain.grid];
-  
-      for (let i = 0; i < batiment.taille.x; i++) {
-        for (let j = 0; j < batiment.taille.y; j++) {
+
+      for (let i = 0; i < updatedBatiment.taille.x; i++) {
+        for (let j = 0; j < updatedBatiment.taille.y; j++) {
           const targetX = x - i;
           const targetY = y - j;
-  
+
           if (targetX >= 0 && targetX < updatedTerrain.length && targetY >= 0 && targetY < updatedTerrain[targetX].length) {
+            // Cloner la ligne de terrain pour ne pas muter l'original
             updatedTerrain[targetX] = [...updatedTerrain[targetX]];
-  
+
+            // Mettre à jour la case spécifique avec le bâtiment
             updatedTerrain[targetX][targetY] = {
               ...updatedTerrain[targetX][targetY],
               hasBuilding: true,
-              batiment: i === 0 && j === 0 ? batiment : null,
+              batiment: i === 0 && j === 0 ? updatedBatiment : null, // Utiliser le bâtiment modifié seulement pour la première case
             };
           }
         }
@@ -119,14 +126,14 @@ const terrainController = {
 
       terrain.grid = updatedTerrain;
 
-      terrain.markModified('rates');
-      terrain.markModified('grid');
+      terrain.markModified("rates");
+      terrain.markModified("grid");
 
       await terrain.save();
-  
+
       res.json(updatedTerrain[x][y]);
     } catch (error) {
-      res.status(500).json({ message: 'Erreur lors du placement du batiment: '+error });
+      res.status(500).json({ message: "Erreur lors du placement du batiment: " + error });
     }
   },
 };

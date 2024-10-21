@@ -3,7 +3,6 @@ const jwt = require('jsonwebtoken');
 
 const authMiddlewares = {
   verifyToken: (req, res, next) => {
-    console.log("req/body: "+JSON.stringify(req.body));
     const token = req.headers['authorization'] ?? req.body.token;
     if (!token) {
       console.log("aucun token");
