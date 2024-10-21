@@ -38,7 +38,7 @@ const syncMiddleware = {
       const moneyPerSeconde = terrain.rates.money.production - terrain.rates.money.consommation;
 
       terrain.banks.energy = Math.max(Math.min(terrain.banks.energy + energyPerSeconde * differenceInSeconds, terrain.banks.capacity), 0);
-      terrain.banks.money += Math.max(moneyPerSeconde * differenceInSeconds, 0); // todo possibilité de négatif ? 
+      terrain.banks.money = Math.max(terrain.banks.money + moneyPerSeconde * differenceInSeconds, 0); // todo possibilité de négatif ? 
       terrain.last_sync = actualDate;
 
       terrain.markModified("banks");
