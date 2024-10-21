@@ -8,7 +8,9 @@ router.post('/login', authController.login);
 
 router.post('/register', authController.register);
 
-router.post('/quit', authMiddleware.verifyToken, syncMiddleware.synchronizeBanks);
+router.post('/sync', authMiddleware.verifyToken, syncMiddleware.synchronizeBanks, (req, res) => {
+    res.status(200).send("synchronized");
+});
 
 router.get('/id', authController.getUserId);
 
