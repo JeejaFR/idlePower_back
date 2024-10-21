@@ -9,7 +9,7 @@ const generateTerrain = (userID) => {
   const seed = 3843473;
   const grid = generateInitialGrid(gridSize, seed);
   const rates = { energy: { production: 0, consommation: 0 }, money: { production: 0, consommation: 0 } };
-  const banks = { energy: 0, money: 10 };
+  const banks = { energy: 0, money: 10, capacity: 0 };
   const last_sync = new Date();
   return { userID, grid, rates, banks, last_sync };
 };
@@ -124,9 +124,12 @@ const terrainController = {
       terrain.rates.money.consommation += batiment.rates.money.consommation;
       terrain.rates.money.production += batiment.rates.money.production;
 
+      terrain.banks.capacity += batiment.rates.energy.capacity;
+
       terrain.grid = updatedTerrain;
 
       terrain.markModified("rates");
+      terrain.markModified("banks");
       terrain.markModified("grid");
 
       await terrain.save();
