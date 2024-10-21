@@ -8,14 +8,14 @@ var authRouter = require('./routes/authRoutes');
 var terrainRouter = require('./routes/terrainRoutes');
 var batimentRouter = require('./routes/batimentRoutes');
 
+
 const app = express();
 const server = http.createServer(app);
 
 // Utiliser le middleware CORS pour accepter les connexions du frontend
 app.use(cors({
-  origin: 'http://localhost:3000', // Autoriser uniquement votre frontend
-  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE', // Méthodes autorisées
-  allowedHeaders: ['Content-Type', 'Authorization'] // En-têtes autorisés
+  origin: 'http://localhost:3000',  // Autorise uniquement ton front-end React
+  credentials: true  // Autorise les credentials (comme les cookies, headers d'autorisation)
 }));
 
 app.options('*', cors());
@@ -37,7 +37,6 @@ const io = new Server(server, {
 app.use('/api/auth', authRouter);
 app.use('/api/terrain', terrainRouter);
 app.use('/api/batiments', batimentRouter);
-
 
 // Gestion des connexions Socket.io
 io.on('connection', (socket) => {

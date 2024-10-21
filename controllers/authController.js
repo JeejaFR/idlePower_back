@@ -26,7 +26,6 @@ const authController = {
       res.status(500).json({ message: 'Erreur lors de l\'inscription' });
     }
   },
-
   login: async (req, res) => {
     const { email, password } = req.body;
 

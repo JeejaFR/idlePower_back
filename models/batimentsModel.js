@@ -7,8 +7,7 @@ const batimentsSchema = new Schema({
     taille: { type: Object, required: true },
     type: { type: String, required: true },
     price: { type: Number, required: true },
-    consommation: { type: Number, required: true },
-    production: { type: Number, required: true },
+    rates: { type: Object, required: true },
     stock: { type: Number, required: true },
 },{ versionKey: false });
 

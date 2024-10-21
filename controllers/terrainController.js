@@ -2,14 +2,16 @@ const { Users } = require("../models/usersModel");
 const { Terrains } = require("../models/terrainsModel.js");
 const { Batiments } = require("../models/batimentsModel.js");
 
-const { generateInitialGrid } = require('../utils/terrainGeneration.js');
+const { generateInitialGrid } = require('../utils/terrainUtils.js');
 
 const generateTerrain = (userID) => {
   const gridSize = 20;
   const seed = 3843473;
   const grid = generateInitialGrid(gridSize, seed);
   const rates = {energy: {production: 0, consommation: 0}, money: {production: 0, consommation: 0}};
-  return { userID, grid, rates };
+  const banks = {energy: 0, money: 10};
+  const last_sync = new Date();
+  return { userID, grid, rates, banks, last_sync};
 };
 
 const canPlaceBatiment = (grid, x, y, batiment) => {
@@ -54,6 +56,10 @@ const terrainController = {
         { new: true, upsert: true }
       );
 
+      const last_sync = new Date();
+      terrain.last_sync = last_sync;
+      await terrain.save();
+  
       res.json(terrain);
     } catch (error) {
       res.status(500).json({ message: 'Erreur lors de la récupération ou génération du terrain' });
@@ -106,19 +112,11 @@ const terrainController = {
         }
       }
 
-      switch (batiment.type) {
-        case "energy":
-          terrain.rates.energy.production += batiment.production;
-          break;
-        case "money":
-          terrain.rates.money.production += batiment.production;
-          break;
-        default:
-          break;
-      }
+      terrain.rates.energy.consommation += batiment.rates.energy.consommation;
+      terrain.rates.energy.production += batiment.rates.energy.production;
+      terrain.rates.money.consommation += batiment.rates.money.consommation;
+      terrain.rates.money.production += batiment.rates.money.production;
 
-      terrain.rates.energy.consommation += batiment.consommation;
-      terrain.rates.energy.production -= batiment.consommation; // todo peut être revoir la structure
       terrain.grid = updatedTerrain;
 
       terrain.markModified('rates');
@@ -128,7 +126,7 @@ const terrainController = {
   
       res.json(updatedTerrain[x][y]);
     } catch (error) {
-      res.status(500).json({ message: 'Erreur lors du placement du batiment' });
+      res.status(500).json({ message: 'Erreur lors du placement du batiment: '+error });
     }
   },
 };

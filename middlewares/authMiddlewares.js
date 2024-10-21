@@ -3,7 +3,8 @@ const jwt = require('jsonwebtoken');
 
 const authMiddlewares = {
   verifyToken: (req, res, next) => {
-    const token = req.headers['authorization'];
+    console.log("req/body: "+JSON.stringify(req.body));
+    const token = req.headers['authorization'] ?? req.body.token;
     if (!token) {
       console.log("aucun token");
       return res.status(403).json({ message: 'Pas de token fourni' });
