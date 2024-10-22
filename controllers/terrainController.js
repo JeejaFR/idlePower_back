@@ -139,6 +139,41 @@ const terrainController = {
       res.status(500).json({ message: "Erreur lors du placement du batiment: " + error });
     }
   },
+  setBatimentStatus : async (req, res) => {
+    const userID = req.user.userId;
+    const isOn = req.body.isOn;
+    const x = req.body.positionX;
+    const y = req.body.positionY;
+
+    const user = await Users.findById(userID);
+    if (!user) {
+      return res.status(404).json({ message: "Utilisateur non trouvé" });
+    }
+
+    const terrain = await Terrains.findOne({ userID });
+    if (!terrain) {
+      return res.status(404).json({ message: "Terrain non trouvé" });
+    }
+    
+    const batiment = terrain.grid[x][y].batiment;
+
+    if(batiment){
+      if(batiment.isRunning!=isOn){
+        batiment.isRunning = isOn;
+
+        terrain.rates.energy.consommation += isOn ? batiment.rates.energy.consommation : -batiment.rates.energy.consommation ;
+        terrain.rates.energy.production += isOn ? batiment.rates.energy.production : -batiment.rates.energy.production;
+        terrain.rates.money.consommation += isOn ? batiment.rates.money.consommation : -batiment.rates.money.consommation;
+        terrain.rates.money.production += isOn ? batiment.rates.money.production : -batiment.rates.money.production;
+      }
+    }
+    // recalculer la prod
+
+    terrain.markModified("rates");
+
+    await terrain.save();
+    res.status(201).send("Le status du batiment à été changé");
+  }
 };
 
 module.exports = terrainController;
