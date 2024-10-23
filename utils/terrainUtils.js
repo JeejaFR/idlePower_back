@@ -85,10 +85,38 @@ const generateInitialGrid = (gridSize, seed) => {
   );
 };
 
+const updateRessourceRates = (grid) => {
+  let energyProductionRate = 0;
+  let energyConsumptionRate = 0;
+  let moneyProductionRate = 0;
+  let moneyConsumptionRate = 0;
+
+  let energyCapacity = 0;
+
+  grid.forEach(row => {
+    row.forEach(cell => {
+      if (cell.batiment) {
+        const rates = cell.batiment.rates;
+        if(cell.batiment.isRunning){
+          energyProductionRate += rates.energy.production;
+          energyConsumptionRate += rates.energy.consommation;
+          moneyProductionRate += rates.money.production;
+          moneyConsumptionRate += rates.money.consommation;
+        }
+
+        energyCapacity += rates.energy.capacity || 0;
+      }
+    });
+  });
+
+  return { energyProductionRate, energyConsumptionRate, moneyProductionRate, moneyConsumptionRate, energyCapacity };
+}
+
 const disjoncter = (grid) => {
   
 }
 
 module.exports = {
   generateInitialGrid,
+  updateRessourceRates
 };

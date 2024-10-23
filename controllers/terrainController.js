@@ -2,7 +2,7 @@ const { Users } = require("../models/usersModel");
 const { Terrains } = require("../models/terrainsModel.js");
 const { Batiments } = require("../models/batimentsModel.js");
 
-const { generateInitialGrid } = require("../utils/terrainUtils.js");
+const { generateInitialGrid, updateRessourceRates } = require("../utils/terrainUtils.js");
 
 const generateTerrain = (userID) => {
   const gridSize = 20;
@@ -113,18 +113,21 @@ const terrainController = {
             updatedTerrain[targetX][targetY] = {
               ...updatedTerrain[targetX][targetY],
               hasBuilding: true,
-              batiment: i === 0 && j === 0 ? updatedBatiment : null, // Utiliser le bâtiment modifié seulement pour la première case
+              source: {x: x, y: y},
+              batiment: i === 0 && j === 0 ? updatedBatiment : null,
             };
           }
         }
       }
 
-      terrain.rates.energy.consommation += batiment.rates.energy.consommation;
-      terrain.rates.energy.production += batiment.rates.energy.production;
-      terrain.rates.money.consommation += batiment.rates.money.consommation;
-      terrain.rates.money.production += batiment.rates.money.production;
+      const rates = updateRessourceRates(updatedTerrain);
+      terrain.rates.energy.production = rates.energyProductionRate;
+      terrain.rates.energy.consommation = rates.energyConsumptionRate;
+      terrain.rates.money.production = rates.moneyProductionRate;
+      terrain.rates.money.consommation = rates.moneyConsumptionRate;
 
-      terrain.banks.capacity += batiment.rates.energy.capacity;
+      terrain.banks.capacity = rates.energyCapacity;
+
 
       terrain.grid = updatedTerrain;
 
@@ -140,39 +143,49 @@ const terrainController = {
     }
   },
   setBatimentStatus : async (req, res) => {
-    const userID = req.user.userId;
-    const isOn = req.body.isOn;
-    const x = req.body.positionX;
-    const y = req.body.positionY;
-
-    const user = await Users.findById(userID);
-    if (!user) {
-      return res.status(404).json({ message: "Utilisateur non trouvé" });
-    }
-
-    const terrain = await Terrains.findOne({ userID });
-    if (!terrain) {
-      return res.status(404).json({ message: "Terrain non trouvé" });
-    }
-    
-    const batiment = terrain.grid[x][y].batiment;
-
-    if(batiment){
-      if(batiment.isRunning!=isOn){
-        batiment.isRunning = isOn;
-
-        terrain.rates.energy.consommation += isOn ? batiment.rates.energy.consommation : -batiment.rates.energy.consommation ;
-        terrain.rates.energy.production += isOn ? batiment.rates.energy.production : -batiment.rates.energy.production;
-        terrain.rates.money.consommation += isOn ? batiment.rates.money.consommation : -batiment.rates.money.consommation;
-        terrain.rates.money.production += isOn ? batiment.rates.money.production : -batiment.rates.money.production;
+    try{
+      const userID = req.user.userId;
+      const isOn = req.body.isOn;
+      const x = req.body.positionX;
+      const y = req.body.positionY;
+  
+      const user = await Users.findById(userID);
+      if (!user) {
+        return res.status(404).json({ message: "Utilisateur non trouvé" });
       }
+  
+      const terrain = await Terrains.findOne({ userID });
+      if (!terrain) {
+        return res.status(404).json({ message: "Terrain non trouvé" });
+      }
+      
+      const batiment = terrain.grid[x][y].batiment;
+  
+      if(batiment){
+        if(batiment.isRunning!=isOn){
+          terrain.grid[x][y].batiment.isRunning = isOn;
+
+          const rates = updateRessourceRates(terrain.grid);
+          terrain.rates.energy.production = rates.energyProductionRate;
+          terrain.rates.energy.consommation = rates.energyConsumptionRate;
+          terrain.rates.money.production = rates.moneyProductionRate;
+          terrain.rates.money.consommation = rates.moneyConsumptionRate;
+    
+          terrain.banks.capacity = rates.energyCapacity;
+    
+          terrain.markModified("rates");
+          terrain.markModified("banks");
+          terrain.markModified("grid");
+  
+          await terrain.save();
+          res.status(201).send("Le status du batiment à été changé");
+        }else{
+          res.status(200).send("Aucun changement de status");
+        }
+      }
+    }catch(error){
+      res.status(500).send("Erreur lors changement de status du batiment: "+error);
     }
-    // recalculer la prod
-
-    terrain.markModified("rates");
-
-    await terrain.save();
-    res.status(201).send("Le status du batiment à été changé");
   }
 };
 
