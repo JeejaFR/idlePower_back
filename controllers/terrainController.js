@@ -137,7 +137,7 @@ const terrainController = {
 
       await terrain.save();
 
-      res.json(updatedTerrain[x][y]);
+      res.status(200).send({rates, energyBanks: terrain.banks.energy});
     } catch (error) {
       res.status(500).json({ message: "Erreur lors du placement du batiment: " + error });
     }
@@ -160,7 +160,7 @@ const terrainController = {
       }
       
       const batiment = terrain.grid[x][y].batiment;
-  
+      
       if(batiment){
         if(batiment.isRunning!=isOn){
           terrain.grid[x][y].batiment.isRunning = isOn;
@@ -178,11 +178,12 @@ const terrainController = {
           terrain.markModified("grid");
   
           await terrain.save();
-          res.status(201).send("Le status du batiment à été changé");
+          return res.status(201).send("Le status du batiment à été changé");
         }else{
-          res.status(200).send("Aucun changement de status");
+          return res.status(200).send("Aucun changement de status");
         }
       }
+      return res.status(404).send("Aucun batiment à cette emplacement");
     }catch(error){
       res.status(500).send("Erreur lors changement de status du batiment: "+error);
     }
